@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mesa Doce com Chef Isa Alencar</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Importmap para React e Lucide-React -->
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.2.0",
+      "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+      "lucide-react": "https://esm.sh/lucide-react@0.263.1",
+      "recharts": "https://esm.sh/recharts@2.12.7",
+      "clsx": "https://esm.sh/clsx@2.1.0",
+      "tailwind-merge": "https://esm.sh/tailwind-merge@2.2.1"
+    }
+  }
+  </script>
+  <!-- Babel para transcompilar JSX inline -->
+  <script src="https://esm.sh/@babel/standalone@7.23.6"></script>
+  <style>
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+  <div id="root"></div>
+
+  <script type="text/babel" data-type="module">
+    import React, { useState, useEffect, useMemo } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { 
+      BookOpen, Calculator, ShoppingBag, Plus, Trash2, 
+      Download, Upload, ChefHat, Save, Search, CheckCircle2, 
+      Circle, AlertCircle, ArrowRight, Image as ImageIcon,
+      Printer, FileText
+    } from 'lucide-react';
+
+    const INITIAL_OFFICIAL_RECIPES = [
+      {
+        id: "isa1",
+        official: true,
+        name: "Pavê de Chocolate com Morango",
+        yieldPortions: "12 porções",
+        yieldTrays: 1,
+        description: "Um clássico que vende fácil e chama atenção na ceia.",
+        photo: "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=600&auto=format&fit=crop&q=80",
+        ingredients: [
+          { name: "Leite condensado (2 latas)", qty: 2, unit: "lata", price: 6.50 },
+          { name: "Creme de leite (2 caixas)", qty: 2, unit: "caixa", price: 3.80 },
+          { name: "Chocolate meio amargo (300 g)", qty: 0.3, unit: "kg", price: 42.00 },
+          { name: "Biscoito champanhe (1 pacote)", qty: 1, unit: "pacote", price: 8.90 },
+          { name: "Leite (2 xícaras)", qty: 0.5, unit: "litro", price: 4.50 },
+          { name: "Morango (2 bandejas)", qty: 2, unit: "bandeja", price: 7.50 }
+        ],
+        steps: [
+          "Prepare um creme com leite condensado e creme de leite.",
+          "Derreta o chocolate e misture ao creme até ficar liso.",
+          "Umedeça os biscoitos no leite e monte camadas alternando creme e biscoito.",
+          "Finalize com morangos, gele bem e sirva."
+        ],
+        packaging: 3.50, labor: 15.00, other: 4.00, fee: 5.0, fixedFee: 0.00, margin: 40
+      },
+      {
+        id: "isa2",
+        official: true,
+        name: "Travessa de Ninho com Creme de Avelã",
+        yieldPortions: "10 porções",
+        yieldTrays: 1,
+        description: "Receita de alto desejo, perfeita para encomendas.",
+        photo: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=600&auto=format&fit=crop&q=80",
+        ingredients: [
+          { name: "Leite condensado (2 latas)", qty: 2, unit: "lata", price: 6.50 },
+          { name: "Creme de leite (2 caixas)", qty: 2, unit: "caixa", price: 3.80 },
+          { name: "Leite em pó (1 xícara)", qty: 0.2, unit: "kg", price: 38.00 },
+          { name: "Creme de avelã (250 g)", qty: 0.25, unit: "kg", price: 55.00 },
+          { name: "Leite (200 ml)", qty: 0.2, unit: "litro", price: 4.50 },
+          { name: "Biscoito maisena (1 pacote)", qty: 1, unit: "pacote", price: 4.50 }
+        ],
+        steps: [
+          "Prepare o creme de leite em pó com leite condensado e creme de leite.",
+          "Faça camadas de creme, biscoito umedecido e creme de avelã.",
+          "Repita até preencher a travessa.",
+          "Finalize com leite em pó e gele antes de servir."
+        ],
+        packaging: 4.00, labor: 15.00, other: 4.00, fee: 5.0, fixedFee: 0.00, margin: 45
+      },
+      {
+        id: "isa3",
+        official: true,
+        name: "Banoffee na Travessa",
+        yieldPortions: "10 porções",
+        yieldTrays: 1,
+        description: "Sofisticada, cremosa e com ótima aceitação.",
+        photo: "https://images.unsplash.com/photo-1535141192574-5d4897c13136?w=600&auto=format&fit=crop&q=80",
+        ingredients: [
+          { name: "Biscoito triturado (300 g)", qty: 0.3, unit: "kg", price: 12.00 },
+          { name: "Manteiga derretida (120 g)", qty: 0.12, unit: "kg", price: 40.00 },
+          { name: "Doce de leite (2 potes)", qty: 0.8, unit: "kg", price: 22.00 },
+          { name: "Banana (5 unidades)", qty: 5, unit: "unidade", price: 0.80 },
+          { name: "Chantilly (400 ml)", qty: 0.4, unit: "litro", price: 18.00 },
+          { name: "Canela", qty: 1, unit: "porção", price: 1.50 }
+        ],
+        steps: [
+          "Misture o biscoito com a manteiga e faça a base.",
+          "Espalhe o doce de leite sobre a base.",
+          "Acrescente as bananas fatiadas e cubra com chantilly.",
+          "Finalize com canela e mantenha refrigerado."
+        ],
+        packaging: 3.50, labor: 12.00, other: 3.00, fee: 5.0, fixedFee: 0.00, margin: 40
+      },
+      {
+        id: "isa4",
+        official: true,
+        name: "Pavê Cremoso de Abacaxi",
+        yieldPortions: "12 porções",
+        yieldTrays: 1,
+        description: "Fresco, leve e com cara de Natal brasileiro.",
+        photo: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80",
+        ingredients: [
+          { name: "Abacaxi picado (1 unidade)", qty: 1, unit: "unidade", price: 7.00 },
+          { name: "Açúcar (1 xícara)", qty: 0.2, unit: "kg", price: 4.20 },
+          { name: "Leite condensado (2 latas)", qty: 2, unit: "lata", price: 6.50 },
+          { name: "Creme de leite (2 caixas)", qty: 2, unit: "caixa", price: 3.80 },
+          { name: "Biscoito maisena (1 pacote)", qty: 1, unit: "pacote", price: 4.50 },
+          { name: "Leite de coco (200 ml)", qty: 0.2, unit: "litro", price: 6.00 }
+        ],
+        steps: [
+          "Cozinhe o abacaxi com o açúcar até reduzir.",
+          "Prepare o creme e reserve.",
+          "Monte camadas de biscoito, creme e abacaxi cozido.",
+          "Finalize e gele por pelo menos 4 horas."
+        ],
+        packaging: 3.50, labor: 14.00, other: 3.50, fee: 5.0, fixedFee: 0.00, margin: 38
+      },
+      {
+        id: "isa5",
+        official: true,
+        name: "Torta Holandesa na Travessa",
+        yieldPortions: "12 porções",
+        yieldTrays: 1,
+        description: "Clássica de festa, com valor percebido alto.",
+        photo: "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&auto=format&fit=crop&q=80",
+        ingredients: [
+          { name: "Manteiga sem sal (200 g)", qty: 0.2, unit: "kg", price: 40.00 },
+          { name: "Leite condensado (1 lata)", qty: 1, unit: "lata", price: 6.50 },
+          { name: "Creme de leite (2 caixas)", qty: 2, unit: "caixa", price: 3.80 },
+          { name: "Biscoito tipo calipso (1 pacote)", qty: 1.5, unit: "pacote", price: 9.50 },
+          { name: "Chocolate meio amargo (200 g)", qty: 0.2, unit: "kg", price: 42.00 },
+          { name: "Chantilly (1 caixa)", qty: 1, unit: "caixa", price: 12.00 }
+        ],
+        steps: [
+          "Bata a manteiga, o leite condensado e o creme até obter um creme fofo.",
+          "Monte com biscoitos na lateral da travessa e o creme no centro.",
+          "Cubra com ganache de chocolate.",
+          "Leve para gelar antes de servir."
+        ],
+        packaging: 4.50, labor: 16.00, other: 4.00, fee: 5.0, fixedFee: 0.00, margin: 42
+      },
+      {
+        id: "isa6",
+        official: true,
+        name: "Mousse de Maracujá com Ganache de Chocolate",
+        yieldPortions: "10 porções",
+        yieldTrays: 1,
+        description: "Fácil, econômica e campeã de aceitação.",
+        photo: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=600&auto=format&fit=crop&q=80",
+        ingredients: [
+          { name: "Leite condensado (1 lata)", qty: 1, unit: "lata", price: 6.50 },
+          { name: "Creme de leite (2,5 caixas)", qty: 2.5, unit: "caixa", price: 3.80 },
+          { name: "Suco concentrado de maracujá (200 ml)", qty: 0.2, unit: "litro", price: 7.00 },
+          { name: "Chocolate meio amargo (200 g)", qty: 0.2, unit: "kg", price: 42.00 },
+          { name: "Polpa de maracujá", qty: 1, unit: "porção", price: 5.00 }
+        ],
+        steps: [
+          "Bata o leite condensado, o creme de leite e o suco de maracujá até firmar.",
+          "Coloque na travessa e deixe gelar.",
+          "Cubra com a ganache de chocolate.",
+          "Finalize com polpa de maracujá."
+        ],
+        packaging: 3.50, labor: 12.00, other: 3.00, fee: 5.0, fixedFee: 0.00, margin: 40
+      },
+      {
+        id: "isa7",
+        official: true,
+        name: "Bombom de Uva na Travessa",
+        yieldPortions: "12 porções",
+        yieldTrays: 1,
+        description: "Uma das queridinhas para venda por encomenda.",
+        photo: "https://images.unsplash.com/photo-1599785209707-a456fc1337cc?w=600&auto=format&fit=crop&q=80",
+        ingredients: [
+          { name: "Leite condensado (2 latas)", qty: 2, unit: "lata", price: 6.50 },
+          { name: "Creme de leite (3 caixas)", qty: 3, unit: "caixa", price: 3.80 },
+          { name: "Uvas verdes sem semente (500 g)", qty: 0.5, unit: "kg", price: 14.00 },
+          { name: "Chocolate ao leite (250 g)", qty: 0.25, unit: "kg", price: 40.00 },
+          { name: "Manteiga", qty: 1, unit: "porção", price: 2.00 }
+        ],
+        steps: [
+          "Prepare o creme branco e espalhe na travessa.",
+          "Distribua as uvas higienizadas por cima.",
+          "Cubra com a ganache de chocolate.",
+          "Leve para gelar e sirva bem gelado."
+        ],
+        packaging: 4.00, labor: 15.00, other: 4.00, fee: 5.0, fixedFee: 0.00, margin: 42
+      },
+      {
+        id: "isa8",
+        official: true,
+        name: "Pavê de Bombom Crocante",
+        yieldPortions: "12 porções",
+        yieldTrays: 1,
+        description: "Brasileiro, indulgente e perfeito para datas especiais.",
+        photo: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=600&auto=format&fit=crop&q=80",
+        ingredients: [
+          { name: "Leite condensado (2 latas)", qty: 2, unit: "lata", price: 6.50 },
+          { name: "Creme de leite (2 caixas)", qty: 2, unit: "caixa", price: 3.80 },
+          { name: "Biscoito maisena (1 pacote)", qty: 1, unit: "pacote", price: 4.50 },
+          { name: "Bombom crocante (10 unidades)", qty: 10, unit: "unidade", price: 1.50 },
+          { name: "Chocolate ao leite (200 g)", qty: 0.2, unit: "kg", price: 40.00 },
+          { name: "Leite (200 ml)", qty: 0.2, unit: "litro", price: 4.50 }
+        ],
+        steps: [
+          "Faça um creme branco e reserve.",
+          "Monte camadas de creme, biscoito umedecido e bombom picado.",
+          "Finalize com ganache e mais bombom por cima.",
+          "Leve para gelar antes de servir."
+        ],
+        packaging: 3.80, labor: 14.00, other: 3.50, fee: 5.0, fixedFee: 0.00, margin: 40
+      },
+      {
+        id: "isa9",
+        official: true,
+        name: "Pavê de Ninho com Frutas Vermelhas",
+        yieldPortions: "10 porções",
+        yieldTrays: 1,
+        description: "Delicado, elegante e muito fotogênico.",
+        photo: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&auto=format&fit=crop&q=80",
+        ingredients: [
+          { name: "Leite condensado (2 latas)", qty: 2, unit: "lata", price: 6.50 },
+          { name: "Creme de leite (2 caixas)", qty: 2, unit: "caixa", price: 3.80 },
+          { name: "Leite em pó (1 xícara)", qty: 0.2, unit: "kg", price: 38.00 },
+          { name: "Biscoito maisena (1 pacote)", qty: 1, unit: "pacote", price: 4.50 },
+          { name: "Frutas vermelhas (300 g)", qty: 0.3, unit: "kg", price: 24.00 },
+          { name: "Açúcar (3 colheres)", qty: 0.05, unit: "kg", price: 4.20 }
+        ],
+        steps: [
+          "Prepare o creme de leite em pó.",
+          "Faça uma calda rápida com frutas vermelhas e açúcar.",
+          "Monte camadas de creme, biscoito e calda.",
+          "Finalize com frutas e gele antes de servir."
+        ],
+        packaging: 4.20, labor: 16.00, other: 4.00, fee: 5.0, fixedFee: 0.00, margin: 45
+      },
+      {
+        id: "isa10",
+        official: true,
+        name: "Cheesecake de Frutas Vermelhas na Travessa",
+        yieldPortions: "12 porções",
+        yieldTrays: 1,
+        description: "Fecha a coleção com percepção premium.",
+        photo: "https://images.unsplash.com/photo-1524351199678-941a58a3df50?w=600&auto=format&fit=crop&q=80",
+        ingredients: [
+          { name: "Biscoito triturado (300 g)", qty: 0.3, unit: "kg", price: 12.00 },
+          { name: "Manteiga derretida (120 g)", qty: 0.12, unit: "kg", price: 40.00 },
+          { name: "Cream cheese (300 g)", qty: 0.3, unit: "kg", price: 32.00 },
+          { name: "Leite condensado (1 lata)", qty: 1, unit: "lata", price: 6.50 },
+          { name: "Creme de leite (1 caixa)", qty: 1, unit: "caixa", price: 3.80 },
+          { name: "Frutas vermelhas (300 g)", qty: 0.3, unit: "kg", price: 24.00 }
+        ],
+        steps: [
+          "Misture o biscoito com a manteiga e faça a base.",
+          "Bata o cream cheese com leite condensado e creme de leite.",
+          "Espalhe o creme sobre a base e leve para gelar.",
+          "Finalize com a cobertura de frutas vermelhas."
+        ],
+        packaging: 4.50, labor: 18.00, other: 4.00, fee: 5.0, fixedFee: 0.00, margin: 45
+      }
+    ];
+
+    const STORAGE_KEY = "chef_isa_natal_app_v4";
+
+    const formatBRL = (val) => {
+      const num = Number.isFinite(val) ? val : 0;
+      return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    };
+
+    function App() {
+      const [recipes, setRecipes] = useState(() => {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          }
+        } catch (e) {}
+        return INITIAL_OFFICIAL_RECIPES;
+      });
+
+      const [activeTab, setActiveTab] = useState('biblioteca');
+      const [selectedRecipeId, setSelectedRecipeId] = useState(recipes[0]?.id || 'isa1');
+      const [searchTerm, setSearchTerm] = useState('');
+
+      useEffect(() => {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
+        } catch (e) {}
+      }, [recipes]);
+
+      const currentRecipe = useMemo(() => {
+        return recipes.find(r => r.id === selectedRecipeId) || recipes[0];
+      }, [recipes, selectedRecipeId]);
+
+      const officialRecipes = useMemo(() => recipes.filter(r => r.official), [recipes]);
+      const myRecipes = useMemo(() => recipes.filter(r => !r.official), [recipes]);
+
+      const pricing = useMemo(() => {
+        if (!currentRecipe) return { ingTotal: 0, costPerTray: 0, price: 0, profit: 0, err: false };
+
+        const ingTotal = (currentRecipe.ingredients || []).reduce((acc, ing) => {
+          return acc + (Number(ing.qty) || 0) * (Number(ing.price) || 0);
+        }, 0);
+
+        const trays = Math.max(1, Number(currentRecipe.yieldTrays) || 1);
+        const labor = Number(currentRecipe.labor) || 0;
+        const other = Number(currentRecipe.other) || 0;
+        const packaging = Number(currentRecipe.packaging) || 0;
+        const fixedFee = Number(currentRecipe.fixedFee) || 0;
+        
+        const costPerTray = ((ingTotal + labor + other) / trays) + packaging + fixedFee;
+        const feePercent = (Number(currentRecipe.fee) || 0) / 100;
+        const marginPercent = (Number(currentRecipe.margin) || 0) / 100;
+        
+        const denominator = 1 - feePercent - marginPercent;
+        if (denominator <= 0) return { ingTotal, costPerTray, price: 0, profit: 0, err: true };
+
+        const price = costPerTray / denominator;
+        const profit = price - costPerTray - (price * feePercent);
+
+        return { ingTotal, costPerTray, price, profit, err: false };
+      }, [currentRecipe]);
+
+      const handleUpdateRecipeField = (field, value) => {
+        setRecipes(prev => prev.map(r => r.id === selectedRecipeId ? { ...r, [field]: value } : r));
+      };
+
+      const handleUpdateIngredient = (idx, field, value) => {
+        setRecipes(prev => prev.map(r => {
+          if (r.id === selectedRecipeId) {
+            const newIngs = [...r.ingredients];
+            newIngs[idx] = { 
+              ...newIngs[idx], 
+              [field]: field === 'name' || field === 'unit' ? value : Math.max(0, Number(value) || 0) 
+            };
+            return { ...r, ingredients: newIngs };
+          }
+          return r;
+        }));
+      };
+
+      const handleAddIngredient = () => {
+        setRecipes(prev => prev.map(r => {
+          if (r.id === selectedRecipeId) {
+            return { ...r, ingredients: [...r.ingredients, { name: "Novo ingrediente", qty: 1, unit: "unidade", price: 0 }] };
+          }
+          return r;
+        }));
+      };
+
+      const handleRemoveIngredient = (idx) => {
+        setRecipes(prev => prev.map(r => {
+          if (r.id === selectedRecipeId) {
+            return { ...r, ingredients: r.ingredients.filter((_, i) => i !== idx) };
+          }
+          return r;
+        }));
+      };
+
+      const handleCreateNewRecipe = () => {
+        const newId = "user_" + Date.now();
+        const newRecipe = {
+          id: newId,
+          official: false,
+          name: "Nova Sobremesa Personalizada",
+          yieldPortions: "10 porções",
+          yieldTrays: 1,
+          description: "Receita criada por você.",
+          photo: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&auto=format&fit=crop&q=80",
+          ingredients: [
+            { name: "Leite condensado (1 lata)", qty: 1, unit: "lata", price: 6.50 },
+            { name: "Creme de leite (1 caixa)", qty: 1, unit: "caixa", price: 3.80 }
+          ],
+          steps: ["Escreva o passo 1 do modo de preparo."],
+          packaging: 3.50, labor: 15.00, other: 3.00, fee: 5.0, fixedFee: 0.00, margin: 40
+        };
+        setRecipes(prev => [newRecipe, ...prev]);
+        setSelectedRecipeId(newId);
+        setActiveTab('minhas');
+      };
+
+      const handleDeleteRecipe = (id) => {
+        if (confirm("Excluir esta receita personalizada?")) {
+          const filtered = recipes.filter(r => r.id !== id);
+          setRecipes(filtered);
+          if (filtered.length > 0) setSelectedRecipeId(filtered[0].id);
+        }
+      };
+
+      const handleExportData = () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(recipes, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "backup_mesa_doce_chef_isa.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      };
+
+      const handleImportData = (event) => {
+        const fileReader = new FileReader();
+        if (event.target.files && event.target.files[0]) {
+          fileReader.readAsText(event.target.files[0], "UTF-8");
+          fileReader.onload = (e) => {
+            try {
+              const parsed = JSON.parse(e.target.result);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                setRecipes(parsed);
+                setSelectedRecipeId(parsed[0].id);
+                alert("Backup importado com sucesso!");
+              }
+            } catch (err) {
+              alert("Arquivo de backup inválido.");
+            }
+          };
+        }
+      };
+
+      const shoppingList = useMemo(() => {
+        const map = {};
+        recipes.forEach(r => {
+          (r.ingredients || []).forEach(ing => {
+            const key = ing.name.trim().toLowerCase();
+            if (!map[key]) {
+              map[key] = { name: ing.name, qty: 0, unit: ing.unit, estimatedCost: 0 };
+            }
+            map[key].qty += Number(ing.qty) || 0;
+            map[key].estimatedCost += (Number(ing.qty) || 0) * (Number(ing.price) || 0);
+          });
+        });
+
+        return Object.values(map).filter(item => 
+          item.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }, [recipes, searchTerm]);
+
+      return (
+        <div className="min-h-screen flex flex-col bg-amber-50/30">
+          {/* Header */}
+          <header className="bg-gradient-to-r from-amber-950 via-rose-950 to-amber-900 text-white shadow-xl sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-amber-500/20 backdrop-blur-md rounded-2xl border border-amber-400/30 text-amber-300">
+                  <ChefHat className="w-8 h-8" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-widest text-amber-300 bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                    CHEF ISA ALENCAR • MINI-APP
+                  </span>
+                  <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white mt-0.5">
+                    Mesa Doce com Chef Isa Alencar
+                  </h1>
+                </div>
+              </div>
+
+              {/* Navigation Menu */}
+              <nav className="flex flex-wrap justify-center gap-1.5 bg-black/30 p-1.5 rounded-2xl border border-white/10 text-xs sm:text-sm font-bold">
+                <button 
+                  onClick={() => { setActiveTab('biblioteca'); setSelectedRecipeId(officialRecipes[0]?.id || 'isa1'); }}
+                  className={`px-3 py-2 rounded-xl transition-all ${activeTab === 'biblioteca' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-amber-100 hover:bg-white/10'}`}
+                >
+                  10 Receitas da Isa
+                </button>
+                <button 
+                  onClick={() => { setActiveTab('minhas'); if(myRecipes.length > 0) setSelectedRecipeId(myRecipes[0].id); }}
+                  className={`px-3 py-2 rounded-xl transition-all ${activeTab === 'minhas' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-amber-100 hover:bg-white/10'}`}
+                >
+                  Minhas Receitas ({myRecipes.length})
+                </button>
+                <button 
+                  onClick={() => setActiveTab('calculadora')}
+                  className={`px-3 py-2 rounded-xl transition-all ${activeTab === 'calculadora' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-amber-100 hover:bg-white/10'}`}
+                >
+                  Calculadora de Precificação
+                </button>
+                <button 
+                  onClick={() => setActiveTab('compras')}
+                  className={`px-3 py-2 rounded-xl transition-all ${activeTab === 'compras' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-amber-100 hover:bg-white/10'}`}
+                >
+                  Lista de Compras
+                </button>
+                <button 
+                  onClick={() => setActiveTab('backup')}
+                  className={`px-3 py-2 rounded-xl transition-all ${activeTab === 'backup' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-amber-100 hover:bg-white/10'}`}
+                >
+                  Salvar e Recuperar Receitas
+                </button>
+              </nav>
+            </div>
+          </header>
+
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8">
+            {/* ABA 1: 10 RECEITAS DA ISA */}
+            {activeTab === 'biblioteca' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
+                <div className="lg:col-span-4 space-y-4">
+                  <div className="bg-white p-5 rounded-2xl border border-amber-200/60 shadow-sm">
+                    <h2 className="text-lg font-bold text-slate-900 mb-1">Prepare sobremesas especiais comigo!</h2>
+                    <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+                      Olá! Eu sou a <b>Chef Isa Alencar</b> e preparei com muito carinho uma seleção de <b>10 sobremesas natalinas na travessa</b> para você encantar sua família ou começar a vender!
+                    </p>
+                    
+                    <div className="space-y-2.5 max-h-[650px] overflow-y-auto pr-1">
+                      {officialRecipes.map(r => (
+                        <div
+                          key={r.id}
+                          onClick={() => setSelectedRecipeId(r.id)}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
+                            selectedRecipeId === r.id 
+                              ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-400/20' 
+                              : 'bg-white border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          <img 
+                            src={r.photo} 
+                            alt={r.name} 
+                            className="w-16 h-14 object-cover rounded-lg flex-shrink-0 border border-slate-200"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-slate-800 text-xs sm:text-sm truncate">{r.name}</h3>
+                            <p className="text-xs text-slate-500 line-clamp-1">{r.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-8 space-y-6">
+                  {currentRecipe && (
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                      <div className="relative h-64 sm:h-72 w-full bg-slate-900">
+                        <img 
+                          src={currentRecipe.photo} 
+                          alt={currentRecipe.name} 
+                          className="w-full h-full object-cover opacity-90"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-6 text-white">
+                          <span className="inline-block w-fit px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-black text-xs tracking-wider uppercase mb-2">
+                            RECEITA OFICIAL DA CHEF ISA
+                          </span>
+                          <h2 className="text-2xl sm:text-3xl font-black">{currentRecipe.name}</h2>
+                          <p className="text-amber-100 text-xs sm:text-sm mt-1">Rendimento: {currentRecipe.yieldPortions}</p>
+                        </div>
+                      </div>
+
+                      <div className="p-6 space-y-6">
+                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
+                          Olá! Eu sou a Chef Isa Alencar. Escolha sua receita, acompanhe o preparo e use o Precificador Inteligente abaixo para calcular os custos e o preço de venda na sua cidade.
+                        </div>
+
+                        {/* Ingredientes com campos de custo editáveis */}
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900 mb-3">Preencha seus custos de ingredientes</h3>
+                          <div className="space-y-2">
+                            {currentRecipe.ingredients.map((ing, idx) => (
+                              <div key={idx} className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs sm:text-sm">
+                                <div className="font-bold text-slate-800 sm:w-1/2">{ing.name}</div>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-slate-500">Qtd:</span>
+                                    <span className="font-bold">{ing.qty}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-slate-500">R$/un:</span>
+                                    <input 
+                                      type="number" 
+                                      step="0.01" 
+                                      value={ing.price}
+                                      onChange={(e) => handleUpdateIngredient(idx, 'price', e.target.value)}
+                                      className="w-20 p-1.5 border rounded-lg font-bold text-center bg-white text-emerald-700"
+                                    />
+                                  </div>
+                                  <div className="font-black text-slate-900 w-24 text-right">
+                                    {formatBRL(ing.qty * ing.price)}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Modo de Preparo */}
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900 mb-3">Modo de preparo</h3>
+                          <ol className="space-y-2.5">
+                            {currentRecipe.steps.map((step, idx) => (
+                              <li key={idx} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-700">
+                                <span className="w-6 h-6 rounded-full bg-amber-500 text-slate-950 font-black text-xs flex items-center justify-center flex-shrink-0">
+                                  {idx + 1}
+                                </span>
+                                <span className="leading-relaxed mt-0.5">{step}</span>
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ABA 2: MINHAS RECEITAS */}
+            {activeTab === 'minhas' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
+                <div className="lg:col-span-4 space-y-4">
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <h2 className="text-lg font-bold text-slate-900 mb-1">Minhas Receitas Próprias</h2>
+                    <p className="text-xs text-slate-600 mb-4">Cadastre aqui suas próprias sobremesas para precificar.</p>
+                    <button 
+                      onClick={handleCreateNewRecipe}
+                      className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all mb-4"
+                    >
+                      <Plus className="w-4 h-4" /> + Nova Receita
+                    </button>
+
+                    <div className="space-y-2.5 max-h-[500px] overflow-y-auto">
+                      {myRecipes.length === 0 ? (
+                        <p className="text-xs text-slate-400 text-center py-6">Você ainda não cadastrou nenhuma receita própria.</p>
+                      ) : (
+                        myRecipes.map(r => (
+                          <div
+                            key={r.id}
+                            onClick={() => setSelectedRecipeId(r.id)}
+                            className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
+                              selectedRecipeId === r.id 
+                                ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-400/20' 
+                                : 'bg-white border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            <img src={r.photo} alt={r.name} className="w-14 h-14 object-cover rounded-lg flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-bold text-slate-800 text-xs truncate">{r.name}</h3>
+                              <p className="text-xs text-slate-500 line-clamp-1">{r.description}</p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-8">
+                  {currentRecipe && !currentRecipe.official ? (
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                      <div className="flex justify-between items-center border-b pb-4">
+                        <h2 className="text-xl font-bold text-slate-900">Editar Receita Personalizada</h2>
+                        <button 
+                          onClick={() => handleDeleteRecipe(currentRecipe.id)}
+                          className="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold rounded-lg text-xs flex items-center gap-1.5"
+                        >
+                          <Trash2 className="w-4 h-4" /> Excluir Receita
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Nome da Receita</label>
+                          <input 
+                            value={currentRecipe.name}
+                            onChange={(e) => handleUpdateRecipeField('name', e.target.value)}
+                            className="w-full p-2 border border-slate-300 rounded-xl text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Rendimento (Porções)</label>
+                          <input 
+                            value={currentRecipe.yieldPortions}
+                            onChange={(e) => handleUpdateRecipeField('yieldPortions', e.target.value)}
+                            className="w-full p-2 border border-slate-300 rounded-xl text-sm"
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-xs font-bold text-slate-700 mb-1">URL da Imagem da Receita</label>
+                          <input 
+                            value={currentRecipe.photo}
+                            onChange={(e) => handleUpdateRecipeField('photo', e.target.value)}
+                            className="w-full p-2 border border-slate-300 rounded-xl text-sm"
+                            placeholder="https://..."
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <h3 className="text-sm font-bold text-slate-900">Ingredientes</h3>
+                          <button onClick={handleAddIngredient} className="text-xs font-bold text-emerald-600 hover:underline">+ Adicionar Ingrediente</button>
+                        </div>
+                        <div className="space-y-2">
+                          {currentRecipe.ingredients.map((ing, i) => (
+                            <div key={i} className="flex items-center gap-2">
+                              <input 
+                                value={ing.name} 
+                                onChange={(e) => handleUpdateIngredient(i, 'name', e.target.value)} 
+                                className="flex-1 p-2 border rounded-xl text-xs" 
+                                placeholder="Ingrediente"
+                              />
+                              <input 
+                                type="number" 
+                                value={ing.qty} 
+                                onChange={(e) => handleUpdateIngredient(i, 'qty', e.target.value)} 
+                                className="w-16 p-2 border rounded-xl text-xs text-center" 
+                              />
+                              <input 
+                                value={ing.unit} 
+                                onChange={(e) => handleUpdateIngredient(i, 'unit', e.target.value)} 
+                                className="w-20 p-2 border rounded-xl text-xs text-center" 
+                              />
+                              <input 
+                                type="number" 
+                                step="0.01" 
+                                value={ing.price} 
+                                onChange={(e) => handleUpdateIngredient(i, 'price', e.target.value)} 
+                                className="w-20 p-2 border rounded-xl text-xs text-center text-emerald-700 font-bold" 
+                              />
+                              <button onClick={() => handleRemoveIngredient(i)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-white p-8 rounded-2xl border text-center text-slate-500">
+                      Selecione uma receita personalizada na lista ao lado ou clique em "+ Nova Receita".
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ABA 3: CALCULADORA DE PRECIFICAÇÃO */}
+            {activeTab === 'calculadora' && currentRecipe && (
+              <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900">Precificador Inteligente</h2>
+                      <p className="text-xs text-slate-500">Calculando valores para: <b>{currentRecipe.name}</b></p>
+                    </div>
+                    <select 
+                      value={selectedRecipeId}
+                      onChange={(e) => setSelectedRecipeId(e.target.value)}
+                      className="p-2 border border-amber-300 bg-amber-50 rounded-xl font-bold text-xs text-slate-800"
+                    >
+                      {recipes.map(r => (
+                        <option key={r.id} value={r.id}>{r.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h3 className="font-bold text-sm text-slate-800 border-b pb-2">1. Outros Custos e Rendimento</h3>
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <label className="block text-slate-600 mb-1">Rendimento (travessas)</label>
+                          <input 
+                            type="number" min="1" 
+                            value={currentRecipe.yieldTrays} 
+                            onChange={(e) => handleUpdateRecipeField('yieldTrays', Math.max(1, Number(e.target.value)))}
+                            className="w-full p-2 border rounded-xl font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-600 mb-1">Embalagem por travessa (R$)</label>
+                          <input 
+                            type="number" step="0.01" 
+                            value={currentRecipe.packaging} 
+                            onChange={(e) => handleUpdateRecipeField('packaging', Math.max(0, Number(e.target.value)))}
+                            className="w-full p-2 border rounded-xl font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-600 mb-1">Mão de obra por receita (R$)</label>
+                          <input 
+                            type="number" step="0.01" 
+                            value={currentRecipe.labor} 
+                            onChange={(e) => handleUpdateRecipeField('labor', Math.max(0, Number(e.target.value)))}
+                            className="w-full p-2 border rounded-xl font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-600 mb-1">Outros custos (gás/luz R$)</label>
+                          <input 
+                            type="number" step="0.01" 
+                            value={currentRecipe.other} 
+                            onChange={(e) => handleUpdateRecipeField('other', Math.max(0, Number(e.target.value)))}
+                            className="w-full p-2 border rounded-xl font-bold"
+                          />
+                        </div>
+                      </div>
+
+                      <h3 className="font-bold text-sm text-slate-800 border-b pb-2 pt-2">2. Taxas e Margem Desejada</h3>
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <label className="block text-slate-600 mb-1">Taxas de Venda/Cartão (%)</label>
+                          <input 
+                            type="number" step="0.1" 
+                            value={currentRecipe.fee} 
+                            onChange={(e) => handleUpdateRecipeField('fee', Math.max(0, Number(e.target.value)))}
+                            className="w-full p-2 border rounded-xl font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-600 mb-1">Margem Desejada (%)</label>
+                          <input 
+                            type="number" step="1" 
+                            value={currentRecipe.margin} 
+                            onChange={(e) => handleUpdateRecipeField('margin', Math.max(1, Number(e.target.value)))}
+                            className="w-full p-2 border rounded-xl font-bold text-amber-700 bg-amber-50"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Resultado Visual */}
+                    <div className="bg-gradient-to-br from-amber-500/10 via-emerald-500/5 to-slate-900/5 p-6 rounded-2xl border border-amber-200 flex flex-col justify-between">
+                      <div>
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">PREÇO SUGERIDO POR TRAVESSA</span>
+                        <div className="text-4xl font-black text-emerald-600 mt-1 mb-4">
+                          {pricing.err ? "Ajuste a margem" : formatBRL(pricing.price)}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-xs mb-4">
+                          <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <span className="text-slate-400 block text-[10px]">Custo Ingredientes</span>
+                            <span className="font-bold text-slate-800">{formatBRL(pricing.ingTotal)}</span>
+                          </div>
+                          <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <span className="text-slate-400 block text-[10px]">Custo por Travessa</span>
+                            <span className="font-bold text-slate-800">{formatBRL(pricing.costPerTray)}</span>
+                          </div>
+                          <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <span className="text-slate-400 block text-[10px]">Lucro Projetado</span>
+                            <span className="font-black text-emerald-600">{formatBRL(pricing.profit)}</span>
+                          </div>
+                          <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <span className="text-slate-400 block text-[10px]">Margem Real</span>
+                            <span className="font-bold text-amber-600">{currentRecipe.margin}%</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button onClick={() => window.print()} className="w-full py-2.5 bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2">
+                        <Printer className="w-4 h-4" /> Salvar Cálculo em PDF
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ABA 4: LISTA DE COMPRAS */}
+            {activeTab === 'compras' && (
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm animate-fade-in max-w-3xl mx-auto space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-bold text-slate-900">Lista de Compras Consolidada</h2>
+                </div>
+                <p className="text-xs text-slate-500">Soma de matérias-primas de todas as receitas ativas para facilitar suas compras.</p>
+                
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-3 text
